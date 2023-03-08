@@ -27,14 +27,6 @@ function MapViewControl(prop) {
   map.panTo(prop.position)
 }
 
-// const GetMapEvents = ({setZoom}) => {
-//   const map = useMapEvents({
-//     zoomend(){
-//       setZoom(map.getZoom())
-//     }
-//   })
-// }
-
 
 function View() {
 
@@ -52,8 +44,6 @@ function View() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
-  // const markerRef = useRef(null);
-  // const [zoom, setZoom] = useState(null);
   
   const [position, setPosition] = useState(location.state ? JSON.parse(location.state.position) :
   {
@@ -78,13 +68,11 @@ function View() {
     }
   }
 
-  // const [location, setLocation] = useState();
-
   // // Mapの初期表示時、現在位置を表示する
   // useEffect(() => {
   //   navigator.geolocation.getCurrentPosition((e) => {
   //     const { latitude: lat, longitude: lng } = e.coords;
-  //     setLocation({ lat, lng });
+  //     setPosition{ lat, lng });
   //   });
   // }, []);
 
@@ -113,14 +101,6 @@ function View() {
     setIsModalOpen(false);
     setSelectedSpot([]);
   }
-
-  // useEffect(() => {
-  //   if (markerRef.current!==undefined&&zoom>16) {
-  //     markerRef.current.openPopup() 
-  //   } else if (markerRef.current!==undefined&&zoom<14) {
-  //     markerRef.current.leafletElement.closePopup() 
-  //   }
-  // }, [zoom])
 
   // 高さ調整
   window.addEventListener('resize', () => {
@@ -169,8 +149,7 @@ function View() {
         </Box>
         <LayeredMap center={position}>
           <LocationMarker position={position} setPosition={setPosition} onSelectedSpot={onSelectedSpot} />
-          <MapViewControl position={position} />
-          {/* <GetMapEvents setZoom={setZoom} /> */}
+          {/* <MapViewControl position={position} /> */}
           <LayerGroup>
             {
               spots.map((spot) => {
@@ -178,7 +157,6 @@ function View() {
                   <Marker
                     position={JSON.parse(spot.location)}
                     key={spot.id} 
-                    // ref={markerRef}
                     eventHandlers={{
                       click: (e) => {
                         setPosition(JSON.parse(spot.location));
@@ -187,12 +165,13 @@ function View() {
                     }}>
                     {isOpen ?
                     <Tooltip direction="top" offset={[1, -35]} opacity={1} permanent>{spot.store}</Tooltip>
-                    : null}
-                    {/* <Popup>
+                    : 
+                    <Popup>
                       <div>
                         <p>{spot.store}</p>
                       </div>
-                    </Popup> */}
+                    </Popup>
+                    }
                   </Marker>
                 )
               })
@@ -203,7 +182,7 @@ function View() {
       <Modal
         isOpen={isModalOpen}
         onRequestClose={closeModal}
-        style={{ overlay: { zIndex: 1000, display: 'flex', justifyContent: 'center' }, content: { maxWidth: '500px' } }}
+        style={{ overlay: { zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center' }, content: { inset: 'auto', width: '70%', height: '80%', maxWidth: '500px' } }}
       >
         <Entry spot={selectedSpot} position={position} setIsLoading={setIsLoading} getData={getData} />
       </Modal>
