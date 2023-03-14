@@ -12,6 +12,7 @@ import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 import LayeredMap from './LayeredMap'
 import LocationMarker from './LocationMarker';
 import Entry from './Entry';
+import RoutingMachine from './RoutingMachine';
 
 //マーカーのデフォルトアイコンを設定
 let defaultIcon = Leaflet.icon({
@@ -51,6 +52,12 @@ function View() {
     lng: 137.11121003745856,
   });
   const [address, setAddress] = useState("")
+  
+  // Start-End points for the routing machine:
+  const [endSpot, setEndSpot] = useState(null);
+  const [start, setStart] = useState(null);
+  const [end, setEnd] = useState(null);
+  const [isRouting, setIsRouting] = useState(false);
 
   //住所検索
   const onSearch = async () => {
@@ -78,6 +85,10 @@ function View() {
 
   const getData = async () => {
     setIsLoading(true);
+    // 初期化
+    setIsRouting(false);
+    document.getElementById("routingMenu").style.display = "none";
+    // データ取得
     await axiosClient.get("/view")
     .then(res => setSpots(res.data))
     .catch(e => {
@@ -101,6 +112,23 @@ function View() {
     setIsModalOpen(false);
     setSelectedSpot([]);
   }
+
+  const onRouteSearch = () => {
+    if (start !== null && end !== null) {
+      setIsRouting(true);
+    } else {
+      alert("地点設定が不正です");
+    }
+  }
+
+  useEffect(() => {
+    if (endSpot !== null) {
+      setSpots([endSpot]);
+      setEnd(JSON.parse(endSpot.location));
+      setIsModalOpen(false);
+      document.getElementById("routingMenu").style.display = "flex";
+    }
+  }, [endSpot])
 
   // 高さ調整
   window.addEventListener('resize', () => {
@@ -137,6 +165,25 @@ function View() {
             検索
           </Button>
         </Box>
+        <Box id="routingMenu" sx={{ py: 1, display: 'none', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }} >
+          <Typography>出発点にマーカーをセット</Typography>
+          <Button
+            size="small"
+            type="submit"
+            variant="contained"
+            onClick={onRouteSearch}
+          >
+            ルート
+          </Button>
+          <Button
+            size="small"
+            type="submit"
+            variant="contained"
+            onClick={() => getData()}
+          >
+            解除
+          </Button>
+        </Box>
       </Box>
       <Box sx={{ position: 'relative' }}>
         <Box
@@ -148,8 +195,9 @@ function View() {
           />
         </Box>
         <LayeredMap center={position}>
-          <LocationMarker position={position} setPosition={setPosition} onSelectedSpot={onSelectedSpot} />
+          <LocationMarker position={position} setPosition={setPosition} onSelectedSpot={onSelectedSpot} setStart={setStart} />
           {/* <MapViewControl position={position} /> */}
+          {isRouting && <RoutingMachine start={start} end={end} />}
           <LayerGroup>
             {
               spots.map((spot) => {
@@ -184,7 +232,7 @@ function View() {
         onRequestClose={closeModal}
         style={{ overlay: { zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center' }, content: { inset: 'auto', width: '70%', height: '80%', maxWidth: '500px' } }}
       >
-        <Entry spot={selectedSpot} position={position} setIsLoading={setIsLoading} getData={getData} />
+        <Entry spot={selectedSpot} position={position} setIsLoading={setIsLoading} getData={getData} setEndSpot={setEndSpot} />
       </Modal>
       <Backdrop
         sx={{ color: '#fff', zIndex: 1100 }}

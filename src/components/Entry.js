@@ -4,7 +4,7 @@ import { axiosClient } from '../hooks/axiosClient';
 import axios from 'axios';
 import { useAuth } from '../hooks/use-auth';
 
-const Entry = ({spot, position, setIsLoading, getData}) => {
+const Entry = ({spot, position, setIsLoading, getData, setEndSpot}) => {
 
   const { username, owner, accessToken } = useAuth();
   axiosClient.interceptors.request.use((config) => {
@@ -45,7 +45,8 @@ const Entry = ({spot, position, setIsLoading, getData}) => {
     setSelectedFile(file);
     setIsSelected(true);
     await convertBase64(file)
-    .then(data => setImgPath(data));
+    .then(data => setImgPath(data))
+    .then(document.getElementById("photo").style.display = "block");
   }
 
   useEffect(() => {
@@ -94,6 +95,10 @@ const Entry = ({spot, position, setIsLoading, getData}) => {
       });
       setIsLoading(false);
     }
+  }
+
+  const onRoutingButtonClick = () => {
+    setEndSpot(spot);
   }
 
   return (
@@ -186,8 +191,8 @@ const Entry = ({spot, position, setIsLoading, getData}) => {
           variant="outlined"
         />
         <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-          {/* <img className="photo" src={imgPath} onError={e => e.target.style.display = 'none'} /> */}
-          <img className="photo" src={imgPath} />
+          <img id="photo" className="photo" src={imgPath} onError={e => e.target.style.display = 'none'} />
+          {/* <img className="photo" src={imgPath} /> */}
         </Box>
         <Box
           sx={{
@@ -215,6 +220,33 @@ const Entry = ({spot, position, setIsLoading, getData}) => {
             onClick={onDeleteButtonClick}
           >
             削除
+          </Button>
+        </Box>
+        <Box
+          sx={{
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            paddingTop: '20px'}}
+          >
+          <Button
+            sx={{ width: '45%' }}
+            color="warning"
+            type="submit"
+            variant="contained"
+            onClick={onRoutingButtonClick}
+          >
+            経路
+          </Button>
+          <Box sx={{ width: '10%' }}></Box>
+          <Button
+            sx={{ width: '45%' }}
+            color="warning"
+            type="submit"
+            variant="contained"
+            onClick={() => {window.location.replace(`https://www.google.co.jp/maps?q=${position.lat},${position.lng}`)}}
+          >
+            G MAP
           </Button>
         </Box>
       </Container>

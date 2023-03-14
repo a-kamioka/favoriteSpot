@@ -2,12 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/use-auth';
 import { axiosClient } from "../hooks/axiosClient";
-import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
+import { Box, Backdrop, CircularProgress } from '@mui/material';
+import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
 import EditLocationIcon from '@mui/icons-material/EditLocation';
 
 const List = () => {
 
   const [spots, setSpots] = useState([]);
+  const [isLoading, setIsLoading] = useState([]);
   
   const navigate = useNavigate();
 
@@ -20,12 +22,16 @@ const List = () => {
   })
 
   useEffect(() => {
+    setIsLoading(true);
     axiosClient.get("/view")
     .then(res => {
       setSpots(res.data);
     })
     .catch(e => {
       alert("データの取得に失敗しました");
+    })
+    .finally(()  => {
+      setIsLoading(false)
     })
   }, []);
 
@@ -50,14 +56,14 @@ const List = () => {
       ]
     },
     // { field: 'id', headerName: 'ID', width: 50, columnVisibility: false },
-    { field: 'store', headerName: '店舗名', width: 300 },
+    { field: 'store', headerName: '店舗名', width: 200 },
     { field: 'category', headerName: 'カテゴリ', width: 150 },
     { field: 'user', headerName: '登録者', width: 150 },
     { field: 'comment', headerName: 'コメント', width: 500 },
   ]
 
   return (
-    <div style={{ width: '100%' }}>
+    <Box sx={{ width: '100%', minHeight: '100%' }}>
       <DataGrid
         rows={spots}
         columns={columns}
@@ -67,7 +73,13 @@ const List = () => {
         //   console.log(rowId);
         // }}
       />
-    </div>
+      <Backdrop
+        sx={{ color: '#fff', zIndex: 10 }}
+        open={isLoading}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
+    </Box>
   )
 }
 

@@ -4,6 +4,8 @@ import MenuIcon from '@mui/material/Menu';
 import IconButton from '@mui/icons-material/Menu';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/use-auth';
+import { axiosClient } from '../hooks/axiosClient';
+import axios from 'axios';
 
 const Header = () => {
   const [anchorEl, setAnchorEl] = React.useState(null)
@@ -20,6 +22,22 @@ const Header = () => {
     const result = await auth.signOut();
     alert(result.message);
   };
+
+  const { accessToken } = useAuth();
+  axiosClient.interceptors.request.use((config) => {
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`
+      return config
+    }
+  })
+
+  const onExportClick = async () => {
+    await axiosClient.post("/export")
+    // .then(res => {axios.get(res.data.url)})
+    .then(res => window.open(res.data.url, "_blank"))
+    .catch((e) => {alert("失敗しました")});
+    setAnchorEl(null);
+  }
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -50,6 +68,7 @@ const Header = () => {
             <MenuItem onClick={signOut}>ログアウト</MenuItem>
             <MenuItem onClick={handleClose} component={Link} to="/view">マップ</MenuItem>
             <MenuItem onClick={handleClose} component={Link} to="/list">リスト</MenuItem>
+            <MenuItem onClick={onExportClick}>エクスポート</MenuItem>
           </Menu>  
         </Toolbar>
       </AppBar>

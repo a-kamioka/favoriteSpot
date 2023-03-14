@@ -13,7 +13,7 @@ import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 * ・クリックした位置にアイコン表示する
 *   ・クリックした位置を、親コンポーネント(App)へ通知する(state)し、その位置にMarkerを表示する
 */
-const LocationMarker = ({ position, setPosition, onSelectedSpot }) => {
+const LocationMarker = ({ position, setPosition, onSelectedSpot, setStart }) => {
 
   const redIcon = Leaflet.icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
@@ -25,6 +25,7 @@ const LocationMarker = ({ position, setPosition, onSelectedSpot }) => {
   useMapEvents({
     click: (e) => {
       setPosition(e.latlng);
+      setStart(e.latlng);
     },
   });
 
