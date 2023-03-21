@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Typography, AppBar, Toolbar, Menu, MenuItem } from '@mui/material';
+import { Box, Typography, AppBar, Toolbar, Menu, MenuItem, Backdrop, CircularProgress } from '@mui/material';
 import MenuIcon from '@mui/material/Menu';
 import IconButton from '@mui/icons-material/Menu';
 import { Link } from 'react-router-dom';
@@ -31,11 +31,14 @@ const Header = () => {
     }
   })
 
+  const [isLoading, setIsLoading] = React.useState(false);
   const onExportClick = async () => {
+    setIsLoading(true);
     await axiosClient.post("/export")
     // .then(res => {axios.get(res.data.url)})
     .then(res => window.open(res.data.url, "_blank"))
     .catch((e) => {alert("失敗しました")});
+    setIsLoading(false);
     setAnchorEl(null);
   }
 
@@ -72,6 +75,12 @@ const Header = () => {
           </Menu>  
         </Toolbar>
       </AppBar>
+      <Backdrop
+        sx={{ color: '#fff', zIndex: 1100 }}
+        open={isLoading}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </Box>
   );
 }

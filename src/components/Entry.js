@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Container, TextField, Typography } from '@mui/material';
+import { Box, Button, Container, TextField, Typography, IconButton } from '@mui/material';
 import { axiosClient } from '../hooks/axiosClient';
 import axios from 'axios';
 import { useAuth } from '../hooks/use-auth';
+import CommentIcon from '@mui/icons-material/Comment';
+import CloseIcon from '@mui/icons-material/Close';
 
-const Entry = ({spot, position, setIsLoading, getData, setEndSpot}) => {
+const Entry = ({spot, position, setIsLoading, getData, setEndSpot, setIsMessageOpen, closeModal}) => {
 
   const { username, owner, accessToken } = useAuth();
   axiosClient.interceptors.request.use((config) => {
@@ -20,6 +22,7 @@ const Entry = ({spot, position, setIsLoading, getData, setEndSpot}) => {
   const [store, setStore] = useState(spot.id ? spot.store : []);
   const [category, setCategory] = useState(spot.id ? spot.category : []);
   const [comment, setComment] = useState(spot.id ? spot.comment : []);
+  const [msgCount, setMsgCount] = useState(spot.id ? spot.msgCount : 0);
   const [imgPath, setImgPath] = useState(spot.id ? `/images/${spot.id}.png` : "#");
 
   const [selectedFile, setSelectedFile] = useState([]);
@@ -63,7 +66,7 @@ const Entry = ({spot, position, setIsLoading, getData, setEndSpot}) => {
     if (user.length > 0 && store.length > 0 && category.length > 0) {
       if (user.length < 21 && store.length <= 20 && category.length <= 20 && comment.length <= 50 ) {
         setIsLoading(true);
-        await axiosClient.post("/entry", {"mode": entryMode, "data": {"id":dataId, "owner":owner, "user":user, "store":store, "category":category, "comment":comment, "location":position}})
+        await axiosClient.post("/entry", {"mode": entryMode, "data": {"id":dataId, "owner":owner, "user":user, "store":store, "category":category, "comment":comment, "location":position, "msgCount":msgCount}})
         .then(res => {
           if (isSelected) { axios.put(res.data.url, selectedFile) };
           alert("登録しました");
@@ -110,6 +113,11 @@ const Entry = ({spot, position, setIsLoading, getData, setEndSpot}) => {
       }}
     >
       <Container>
+        <Box sx={{ float: 'right' }}>
+          <IconButton onClick={closeModal} >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
         <TextField
           fullWidth
           size="small"
@@ -120,7 +128,7 @@ const Entry = ({spot, position, setIsLoading, getData, setEndSpot}) => {
           value={user}
           variant="outlined"
           InputProps={{
-            readOnly: (!isModify)
+            readOnly: true
           }}
           inputProps={{
             maxLength: 20
@@ -194,6 +202,14 @@ const Entry = ({spot, position, setIsLoading, getData, setEndSpot}) => {
           <img id="photo" className="photo" src={imgPath} onError={e => e.target.style.display = 'none'} />
           {/* <img className="photo" src={imgPath} /> */}
         </Box>
+        {(dataId) ?
+        <Box sx={{ float: 'right' }}>
+          {msgCount}
+          <IconButton onClick={() => setIsMessageOpen(true)} >
+            <CommentIcon fontSize="small" />
+          </IconButton>
+        </Box>
+        : <></> }
         <Box
           sx={{
             width: '100%',
@@ -246,7 +262,7 @@ const Entry = ({spot, position, setIsLoading, getData, setEndSpot}) => {
             variant="contained"
             onClick={() => {window.location.replace(`https://www.google.co.jp/maps?q=${position.lat},${position.lng}`)}}
           >
-            G MAP
+            外部MAP
           </Button>
         </Box>
       </Container>

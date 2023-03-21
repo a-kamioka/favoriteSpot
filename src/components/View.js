@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import Modal from 'react-modal';
-import { Box, Button, TextField, Typography, Backdrop, CircularProgress, Switch } from '@mui/material';
+import { Box, Container, Button, TextField, Typography, Backdrop, CircularProgress, Switch, IconButton } from '@mui/material';
 import { axiosClient } from '../hooks/axiosClient';
 import { useAuth } from '../hooks/use-auth';
 import Leaflet from 'leaflet'
@@ -12,7 +12,9 @@ import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 import LayeredMap from './LayeredMap'
 import LocationMarker from './LocationMarker';
 import Entry from './Entry';
+import MessageList from './MessageList';
 import RoutingMachine from './RoutingMachine';
+import CloseIcon from '@mui/icons-material/Close';
 
 //マーカーのデフォルトアイコンを設定
 let defaultIcon = Leaflet.icon({
@@ -27,7 +29,6 @@ function MapViewControl(prop) {
   const map = useMap()
   map.panTo(prop.position)
 }
-
 
 function View() {
 
@@ -57,6 +58,7 @@ function View() {
   const [endSpot, setEndSpot] = useState(null);
   const [start, setStart] = useState(null);
   const [end, setEnd] = useState(null);
+  const [isMessageOpen, setIsMessageOpen] = useState(false);
   const [isRouting, setIsRouting] = useState(false);
 
   //住所検索
@@ -65,23 +67,28 @@ function View() {
     const url = `https://msearch.gsi.go.jp/address-search/AddressSearch?q=${encodeURIComponent(address)}`
     const response = await fetch(url);
     const results = await response.json();
-  
+
     if (Array.isArray(results) && results.length > 0) {
       //見つかった住所（施設）の位置を表示
       const coordinates = results[0].geometry.coordinates
-      setPosition([coordinates[1], coordinates[0]])
+      const answerPosition = {
+          lat: coordinates[1],
+          lng: coordinates[0]
+        }
+      // MapViewControl(position=answerPosition)
+      setPosition(answerPosition)
     } else {
       alert("Not Found")
     }
   }
 
-  // // Mapの初期表示時、現在位置を表示する
-  // useEffect(() => {
-  //   navigator.geolocation.getCurrentPosition((e) => {
-  //     const { latitude: lat, longitude: lng } = e.coords;
-  //     setPosition{ lat, lng });
-  //   });
-  // }, []);
+  // Mapの初期表示時、現在位置を表示する
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition((e) => {
+      const { latitude: lat, longitude: lng } = e.coords;
+      setPosition({ lat: lat, lng: lng });
+    });
+  }, []);
 
   const getData = async () => {
     setIsLoading(true);
@@ -110,6 +117,7 @@ function View() {
 
   const closeModal = () => {
     setIsModalOpen(false);
+    setIsMessageOpen(false);
     setSelectedSpot([]);
   }
 
@@ -196,7 +204,7 @@ function View() {
         </Box>
         <LayeredMap center={position}>
           <LocationMarker position={position} setPosition={setPosition} onSelectedSpot={onSelectedSpot} setStart={setStart} />
-          {/* <MapViewControl position={position} /> */}
+          <MapViewControl position={position} />
           {isRouting && <RoutingMachine start={start} end={end} />}
           <LayerGroup>
             {
@@ -230,9 +238,13 @@ function View() {
       <Modal
         isOpen={isModalOpen}
         onRequestClose={closeModal}
-        style={{ overlay: { zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center' }, content: { inset: 'auto', width: '70%', height: '80%', maxWidth: '500px' } }}
+        style={{ overlay: { zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center' }, content: { inset: 'auto', width: '90%', height: '90%', maxWidth: '500px', padding: '10px' } }}
       >
-        <Entry spot={selectedSpot} position={position} setIsLoading={setIsLoading} getData={getData} setEndSpot={setEndSpot} />
+          {(!isMessageOpen) ?
+            <Entry spot={selectedSpot} position={position} setIsLoading={setIsLoading} getData={getData} setEndSpot={setEndSpot} setIsMessageOpen={setIsMessageOpen} closeModal={closeModal} />
+          :
+            <MessageList id={selectedSpot.id} setIsLoading={setIsLoading} closeModal={closeModal} />
+          }
       </Modal>
       <Backdrop
         sx={{ color: '#fff', zIndex: 1100 }}
