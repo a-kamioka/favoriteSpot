@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Box, Container, Drawer, List, TextField, IconButton, Backdrop, CircularProgress } from '@mui/material';
+import { useState, useEffect, useRef } from 'react';
+import { Box, Container, List, TextField, IconButton } from '@mui/material';
 import MessageItem from './MessageItem';
 import SendIcon from '@mui/icons-material/Send';
 import CloseIcon from '@mui/icons-material/Close';
@@ -38,18 +38,60 @@ export default function MessageList({id, setIsLoading, closeModal}) {
     getData();
   }, [])
 
-  const onSendButtonClick = async () => {
+  // const onSendButtonClick = async () => {
+  //   if (messageText !== '') {
+  //     setIsLoading(true);
+  //     await axiosClient.post("/message", {"id":id,"message":messageText,"user":username,"owner":owner,"type":"text"})
+  //     .then(res => {
+  //       getData();
+  //       setMessageText('');
+  //     })
+  //     .catch(e => {
+  //       alert("送信に失敗しました");
+  //     });
+  //     setIsLoading(false);
+  //   } else {
+  //     alert("メッセージが入力されていません")
+  //   }
+  // }
+
+  const ws = useRef(null);
+  useEffect(() => {
+    // WebSocketと接続
+    const Params = {idToken:accessToken, id:id}
+    const queryParams = new URLSearchParams(Params).toString();
+    ws.current = new WebSocket(
+      `wss://faa8skz8c7.execute-api.ap-northeast-1.amazonaws.com/Prod?${queryParams}`
+    );
+    // 接続時の処理
+    ws.current.onopen = () => {
+      console.log("connected");
+    };
+    // 切断時の処理
+    ws.current.onclose = () => {
+      console.log("closed");
+    };
+    // ws.current.onerror = () => {
+    //   alert("通信エラー");
+    // };
+    // WebSocketからメッセージ受信時処理
+    ws.current.onmessage = (event) => {
+      console.log(event.data);
+      setMessages((current) => [...current, JSON.parse(event.data)]);
+    };
+    return () => {
+      // アンマウント時に接続を切断
+      if (ws.current !== null) ws.current.close();
+    };
+  }, []);
+
+  const onSendButtonClick = () => {
     if (messageText !== '') {
-      setIsLoading(true);
-      await axiosClient.post("/message", {"id":id,"message":messageText,"user":username,"owner":owner,"type":"text"})
-      .then(res => {
-        getData();
-        setMessageText('');
-      })
-      .catch(e => {
-        alert("送信に失敗しました");
-      });
-      setIsLoading(false);
+      ws.current.send(JSON.stringify({
+        action: "sendMessage",
+        data: JSON.stringify({id:"1", message:messageText, user:username, owner:owner, type:"text"})
+      }));
+      setMessageText('');
     } else {
       alert("メッセージが入力されていません")
     }
@@ -65,10 +107,11 @@ export default function MessageList({id, setIsLoading, closeModal}) {
       }}
     >
       <Container>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Box sx={{ float: 'right' }}>
+        {/* <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <IconButton onClick={getData} >
             <UpdateIcon fontSize="small" />
-          </IconButton>
+          </IconButton> */}
           <IconButton onClick={closeModal} >
             <CloseIcon fontSize="small" />
           </IconButton>

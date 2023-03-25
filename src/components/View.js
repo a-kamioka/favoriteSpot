@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Modal from 'react-modal';
-import { Box, Container, Button, TextField, Typography, Backdrop, CircularProgress, Switch, IconButton } from '@mui/material';
+import { Box, Button, TextField, Typography, Backdrop, CircularProgress, Switch } from '@mui/material';
 import { axiosClient } from '../hooks/axiosClient';
 import { useAuth } from '../hooks/use-auth';
 import Leaflet from 'leaflet'
-import { useMap, LayerGroup, Marker, Popup, useMapEvents, Tooltip } from 'react-leaflet';
+import { useMap, LayerGroup, Marker, Popup, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
@@ -14,7 +14,7 @@ import LocationMarker from './LocationMarker';
 import Entry from './Entry';
 import MessageList from './MessageList';
 import RoutingMachine from './RoutingMachine';
-import CloseIcon from '@mui/icons-material/Close';
+// import GPS from './GPS';
 
 //マーカーのデフォルトアイコンを設定
 let defaultIcon = Leaflet.icon({
@@ -32,7 +32,7 @@ function MapViewControl(prop) {
 
 function View() {
 
-  const { owner, accessToken } = useAuth();
+  const { accessToken } = useAuth();
   axiosClient.interceptors.request.use((config) => {
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`
@@ -82,12 +82,15 @@ function View() {
     }
   }
 
+  const [initState, setInitState] = useState(location.state ? false : true);
   // Mapの初期表示時、現在位置を表示する
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition((e) => {
-      const { latitude: lat, longitude: lng } = e.coords;
-      setPosition({ lat: lat, lng: lng });
-    });
+    if (initState) {
+      navigator.geolocation.getCurrentPosition((e) => {
+        const { latitude: lat, longitude: lng } = e.coords;
+        setPosition({ lat: lat, lng: lng });
+      });
+    };
   }, []);
 
   const getData = async () => {
@@ -205,6 +208,7 @@ function View() {
         <LayeredMap center={position}>
           <LocationMarker position={position} setPosition={setPosition} onSelectedSpot={onSelectedSpot} setStart={setStart} />
           <MapViewControl position={position} />
+          {/* <GPS setPosition={setPosition} /> */}
           {isRouting && <RoutingMachine start={start} end={end} />}
           <LayerGroup>
             {

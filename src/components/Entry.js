@@ -23,7 +23,7 @@ const Entry = ({spot, position, setIsLoading, getData, setEndSpot, setIsMessageO
   const [category, setCategory] = useState(spot.id ? spot.category : []);
   const [comment, setComment] = useState(spot.id ? spot.comment : []);
   const [msgCount, setMsgCount] = useState(spot.id ? spot.msgCount : 0);
-  const [imgPath, setImgPath] = useState(spot.id ? `/images/${spot.id}.png` : "#");
+  const [imgPath, setImgPath] = useState(spot.id ? spot.image : "#");
 
   const [selectedFile, setSelectedFile] = useState([]);
   const [isSelected, setIsSelected] = useState(false);
