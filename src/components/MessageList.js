@@ -56,6 +56,7 @@ export default function MessageList({id, setIsLoading, closeModal}) {
   // }
 
   const ws = useRef(null);
+  const [status, setStatus] = useState("closed");
   useEffect(() => {
     // WebSocketと接続
     const Params = {idToken:accessToken, id:id}
@@ -66,14 +67,16 @@ export default function MessageList({id, setIsLoading, closeModal}) {
     // 接続時の処理
     ws.current.onopen = () => {
       console.log("connected");
+      setStatus("connected");
     };
     // 切断時の処理
     ws.current.onclose = () => {
       console.log("closed");
+      setStatus("closed");
     };
-    // ws.current.onerror = () => {
-    //   alert("通信エラー");
-    // };
+    ws.current.onerror = () => {
+      alert("通信エラー");
+    };
     // WebSocketからメッセージ受信時処理
     ws.current.onmessage = (event) => {
       console.log(event.data);
@@ -86,14 +89,18 @@ export default function MessageList({id, setIsLoading, closeModal}) {
   }, []);
 
   const onSendButtonClick = () => {
-    if (messageText !== '') {
-      ws.current.send(JSON.stringify({
-        action: "sendMessage",
-        data: JSON.stringify({id:"1", message:messageText, user:username, owner:owner, type:"text"})
-      }));
-      setMessageText('');
+    if (status === "connected") {
+      if (messageText !== '') {
+        ws.current.send(JSON.stringify({
+          action: "sendMessage",
+          data: JSON.stringify({id:id, message:messageText, user:username, owner:owner, type:"text"})
+        }));
+        setMessageText('');
+      } else {
+        alert("メッセージが入力されていません")
+      }
     } else {
-      alert("メッセージが入力されていません")
+      alert("サーバに接続されていません");
     }
   }
 
