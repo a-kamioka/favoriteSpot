@@ -32,6 +32,7 @@ function MapViewControl(prop) {
 
 function View() {
 
+  // トークンIDの埋め込み
   const { accessToken } = useAuth();
   axiosClient.interceptors.request.use((config) => {
     if (accessToken) {
@@ -39,6 +40,7 @@ function View() {
       return config
     }
   })
+
   const location = useLocation();
 
   const [spots, setSpots] = useState([]);
@@ -113,6 +115,7 @@ function View() {
     getData();
   }, [])
 
+  // 選択スポットをモーダルで表示
   const onSelectedSpot = (spot) => {
     setSelectedSpot(spot);
     setIsModalOpen(true);
@@ -124,6 +127,7 @@ function View() {
     setSelectedSpot([]);
   }
 
+  // ルート検索モード
   const onRouteSearch = () => {
     if (start !== null && end !== null) {
       setIsRouting(true);
@@ -132,6 +136,7 @@ function View() {
     }
   }
 
+  // ルート検索用　目的地セット
   useEffect(() => {
     if (endSpot !== null) {
       setSpots([endSpot]);
@@ -151,8 +156,7 @@ function View() {
     <Box
       component="main"
       sx={{
-        flexGrow: 1,
-        minHeight: '100%'
+        flexGrow: 1
       }}
     >
       <Box id='searchBox' sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', flexWrap: 'wrap', gap: '5px' }}>

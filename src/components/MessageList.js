@@ -10,7 +10,8 @@ import { useAuth } from '../hooks/use-auth';
 export default function MessageList({id, setIsLoading, closeModal}) {
 
   const [messages, setMessages] = useState([]);
-  const [messageText, setMessageText] = useState('');
+  // const [messageText, setMessageText] = useState('');
+  const messageText = useRef(null);
 
   const { username, owner, accessToken } = useAuth();
   axiosClient.interceptors.request.use((config) => {
@@ -79,7 +80,6 @@ export default function MessageList({id, setIsLoading, closeModal}) {
     };
     // WebSocketからメッセージ受信時処理
     ws.current.onmessage = (event) => {
-      console.log(event.data);
       setMessages((current) => [...current, JSON.parse(event.data)]);
     };
     return () => {
@@ -90,12 +90,13 @@ export default function MessageList({id, setIsLoading, closeModal}) {
 
   const onSendButtonClick = () => {
     if (status === "connected") {
-      if (messageText !== '') {
+      if (messageText.current.value !== '') {
         ws.current.send(JSON.stringify({
           action: "sendMessage",
-          data: JSON.stringify({id:id, message:messageText, user:username, owner:owner, type:"text"})
+          data: JSON.stringify({id:id, message:messageText.current.value, user:username, owner:owner, type:"text"})
         }));
-        setMessageText('');
+        // setMessageText('');
+        messageText.current.value = '';
       } else {
         alert("メッセージが入力されていません")
       }
@@ -115,15 +116,11 @@ export default function MessageList({id, setIsLoading, closeModal}) {
     >
       <Container>
         <Box sx={{ float: 'right' }}>
-        {/* <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <IconButton onClick={getData} >
-            <UpdateIcon fontSize="small" />
-          </IconButton> */}
           <IconButton onClick={closeModal} >
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
-        <List sx={{ width: '100%', height: '80%', overflow: 'scroll', bgcolor: 'background.paper' }}>
+        <List sx={{ width: '100%', height: '80%', overflow: 'auto', bgcolor: 'background.paper' }}>
           {
             messages.map((item) => {
               return(<MessageItem item={item} />)
@@ -137,10 +134,17 @@ export default function MessageList({id, setIsLoading, closeModal}) {
             label="メッセージを入力"
             margin="normal"
             name="address"
-            onChange={(e) => setMessageText(e.target.value)}
-            value={messageText}
+            // onChange={(e) => setMessageText(e.target.value)}
+            // value={messageText}
+            inputRef={messageText}
             variant="outlined"
             multiline
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                onSendButtonClick();
+              }
+            }}
           />
           <Box>
             <IconButton onClick={onSendButtonClick} >
